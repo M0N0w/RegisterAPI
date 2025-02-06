@@ -1,6 +1,9 @@
 ﻿using RegisterAPII.DTOs;
 using RegisterAPII.Interfaces;
 using RegisterAPII.Models;
+using System;
+using BCrypt.Net;
+using System.Threading.Tasks;
 
 namespace RegisterAPII.Repos
 {
@@ -8,11 +11,13 @@ namespace RegisterAPII.Repos
     {
         private readonly IUserRepository _userRepository;
         private readonly IJwtService _jwtService;
+        private readonly EmailService _emailService;
 
-        public AuthService(IUserRepository userRepository, IJwtService jwtService)
+        public AuthService(IUserRepository userRepository, IJwtService jwtService, EmailService emailService)
         {
             _userRepository = userRepository;
             _jwtService = jwtService;
+            _emailService = emailService;
         }
 
         public async Task<string?> RegisterAsync(RegisterDto dto)
@@ -30,34 +35,52 @@ namespace RegisterAPII.Repos
 
             await _userRepository.AddUserAsync(user);
             await _userRepository.SaveChangesAsync();
+
+            var subject = "Hello in EventHub!";
+            var body = $"Hello {dto.FullName},<br> Thanks for registering in Event Hub.";
+
+            await _emailService.SendEmailAsync(dto.Email, subject, body);
+
             return "Registration successful.";
         }
 
         public async Task<string?> LoginAsync(LoginDto dto)
         {
             var user = await _userRepository.GetUserByEmailAsync(dto.Email);
-            if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-                return null;
+            if (user == null)
+                return "Email not registered.";
 
-            return _jwtService.GenerateToken(user);
+            if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+                return "Incorrect password.";
+
+            var token = _jwtService.GenerateToken(user);
+
+            return token;
         }
 
         public async Task<string?> ForgotPasswordAsync(ForgotPasswordDto dto)
         {
             var user = await _userRepository.GetUserByEmailAsync(dto.Email);
-            if (user == null) return "User not found.";
+            if (user == null)
+                return "Email not registered.";
 
-            user.ResetToken = Guid.NewGuid().ToString();
+            var token = Guid.NewGuid().ToString();
+            user.ResetToken = token;
             user.ResetTokenExpiry = DateTime.UtcNow.AddHours(1);
             await _userRepository.SaveChangesAsync();
 
-            return user.ResetToken; // Simulating token generation
+            var subject = "Reset Your Password";
+            var body = $"Use this token to reset your password: {token}";
+            await _emailService.SendEmailAsync(dto.Email, subject, body);
+
+            return "Token sent to your email.";
         }
 
         public async Task<string?> ResetPasswordAsync(string token, ResetPasswordDto dto)
         {
             var user = await _userRepository.GetUserByResetTokenAsync(token);
-            if (user == null) return "Invalid or expired token.";
+            if (user == null)
+                return "Invalid or expired token.";
 
             if (dto.NewPassword != dto.ConfirmPassword)
                 return "Passwords do not match.";
@@ -67,8 +90,7 @@ namespace RegisterAPII.Repos
             user.ResetTokenExpiry = null;
             await _userRepository.SaveChangesAsync();
 
-            return "Password has been reset.";
+            return "Password changed successfully.";
         }
     }
-
 }

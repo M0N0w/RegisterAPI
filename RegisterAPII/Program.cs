@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RegisterAPII.DATA;
 using RegisterAPII.Interfaces;
+using RegisterAPII.Models;
 using RegisterAPII.Repos;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +32,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Dependency injection
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<EmailService>();
+
 
 // Register JwtService with the key from appsettings as Scoped
 builder.Services.AddScoped<IJwtService>(provider =>

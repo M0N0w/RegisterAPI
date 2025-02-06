@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace RegisterAPII.Migrations
 {
     /// <inheritdoc />
-    public partial class ss : Migration
+    public partial class d : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

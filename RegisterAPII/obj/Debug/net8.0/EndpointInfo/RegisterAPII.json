@@ -232,7 +232,8 @@
             "format": "email"
           },
           "password": {
-            "minLength": 1,
+            "minLength": 5,
+            "pattern": "^(?=.*[A-Z])(?=.*\\d).+$",
             "type": "string"
           }
         },
@@ -246,11 +247,13 @@
         "type": "object",
         "properties": {
           "newPassword": {
-            "minLength": 1,
+            "minLength": 5,
+            "pattern": "^(?=.*[A-Z])(?=.*\\d).+$",
             "type": "string"
           },
           "confirmPassword": {
             "minLength": 1,
+            "pattern": "^(?=.*[A-Z])(?=.*\\d).+$",
             "type": "string"
           }
         },

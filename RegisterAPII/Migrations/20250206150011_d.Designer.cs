@@ -12,8 +12,8 @@ using RegisterAPII.DATA;
 namespace RegisterAPII.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250205152651_ss")]
-    partial class ss
+    [Migration("20250206150011_d")]
+    partial class d
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
